@@ -1,0 +1,54 @@
+form > * {
+  width: 100%;
+}
+
+form > * + * {
+  margin-bottom: 1rem;
+}
+
+select {
+  font-size: var(--font-size-lg);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
+input[type='checkbox'] {
+  width: var(--font-size-lg);
+  height: var(--font-size-lg);
+  margin-right: 0.5rem;
+}
+
+input[type='checkbox'] + label {
+  font-size: var(--font-size-lg);
+}
+
+input[type='range'] {
+  font-size: var(--font-size-lg);
+}
+
+button {
+  font-size: var(--font-size-lg);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  border: none;
+  background: linear-gradient(
+    to bottom right,
+    var(--color-gradient-from) 33.33%,
+    var(--color-gradient-to)
+  );
+  cursor: pointer;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.25ch;
+}
+
+button:disabled {
+  opacity: 0.5;
+  color: var(--color-text);
+  cursor: progress;
+}
+
+button:hover {
+  /** TODO */
+}

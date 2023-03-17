@@ -1,0 +1,26 @@
+header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(0.5rem, 5vh, 3rem) 0;
+}
+
+main {
+  flex-grow: 1;
+}
+
+h1 {
+  text-align: center;
+  text-transform: uppercase;
+  font-size: var(--font-size-xl);
+  font-weight: bold;
+  margin: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-gradient-from) 33.33%,
+    var(--color-gradient-to) 50%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
