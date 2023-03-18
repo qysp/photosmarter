@@ -1,7 +1,7 @@
 {
   "name": "photosmarter",
   "author": "qysp",
-  "license": "MIT",
+  "license": " GPL-3.0",
   "private": true,
   "scripts": {
     "dev": "solid-start dev",
