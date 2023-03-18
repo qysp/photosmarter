@@ -1,7 +1,7 @@
-import assert from 'assert';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { clamp } from '~/lib/common/util';
+import { extension } from 'mime-types';
+import { clamp, env } from '~/lib/common/util';
 
 export const PhotosmartScanResolutions = {
   High: 600,
@@ -56,8 +56,17 @@ export type PhotosmartScanOptions = {
 
 export type PhotosmartStatus = 'Idle' | 'Unknown';
 
-export class PhotosmartService {
-  constructor(readonly baseUrl: string) {}
+export type PhotosmartScanResult = {
+  extension?: string;
+  data: ArrayBuffer;
+};
+
+class PhotosmartService {
+  private readonly baseUrl: string;
+
+  constructor() {
+    this.baseUrl = env('PHOTOSMART_URL');
+  }
 
   async status(): Promise<PhotosmartStatus> {
     const url = this.baseUrl.concat('/Scan/Status');
@@ -74,7 +83,7 @@ export class PhotosmartService {
     }
   }
 
-  async scan(options?: PhotosmartScanOptions): Promise<ArrayBuffer> {
+  async scan(options?: PhotosmartScanOptions): Promise<PhotosmartScanResult> {
     const url = this.baseUrl.concat('/Scan/Jobs');
 
     const normalizedOptions: Required<PhotosmartScanOptions> = {
@@ -104,13 +113,6 @@ export class PhotosmartService {
       );
     }
 
-    // The location header tells us where we can fetch metadata of the
-    // created job from.
-    const location = response.headers['location'];
-    if (location === null) {
-      throw new Error('Response is missing location header');
-    }
-
     // The binary URL should always exist and since we just requested a scan,
     // there should be only a single scan job.
     const [binaryUrl] = await this.fetchIncompleteBinaryUrls();
@@ -124,7 +126,16 @@ export class PhotosmartService {
         responseType: 'arraybuffer',
       },
     );
-    return binaryResponse.data;
+
+    const contentType = binaryResponse.headers['content-type'];
+
+    return {
+      extension:
+        typeof contentType === 'string'
+          ? extension(contentType) || undefined
+          : undefined,
+      data: binaryResponse.data,
+    };
   }
 
   private async fetchIncompleteBinaryUrls() {
@@ -189,9 +200,4 @@ export class PhotosmartService {
   }
 }
 
-const PHOTOSMART_URL = process.env['PHOTOSMART_URL'];
-assert(
-  PHOTOSMART_URL !== undefined,
-  'Make sure to set the environment variable `PHOTOSMART_URL`',
-);
-export default new PhotosmartService(PHOTOSMART_URL);
+export default new PhotosmartService();

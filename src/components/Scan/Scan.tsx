@@ -1,6 +1,7 @@
+import { format } from 'date-fns';
 import { createSignal } from 'solid-js';
 import { createServerAction$, json } from 'solid-start/server';
-import { FilesystemAdapter } from '~/lib/adapters/filesystem/filesystem';
+import fileService from '~/lib/services/file-service';
 import photosmartService, {
   PhotosmartScanDimensions,
   PhotosmartScanOptions,
@@ -30,7 +31,9 @@ export default () => {
       });
     }
 
-    const file = await photosmartService.scan({
+    // TODO: handle errors and give updates regarding the state (unvavailable,
+    // scanning, saving, ...)
+    const { data, extension } = await photosmartService.scan({
       type,
       dimension: PhotosmartScanDimensions[dimension],
       resolution: PhotosmartScanResolutions[resolution],
@@ -38,7 +41,11 @@ export default () => {
       color,
     });
 
-    await new FilesystemAdapter().saveFile('./test.pdf', Buffer.from(file));
+    const filename = format(new Date(), 'yyyyMMdd_HHmmss').concat(
+      '.',
+      extension ?? 'unknown',
+    );
+    await fileService.save(filename, data);
 
     return json({
       success: true,
