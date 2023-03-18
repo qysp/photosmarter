@@ -1,7 +1,7 @@
-import { Adapter } from '~/lib/adapters/adapter';
-import filesystemAdapter from '~/lib/adapters/filesystem-adapter';
-import webDavAdapter from '~/lib/adapters/webdav-adapter';
-import { env } from '~/lib/common/util';
+import { Adapter } from '~/server/adapters/adapter';
+import filesystemAdapter from '~/server/adapters/filesystem-adapter';
+import webDavAdapter from '~/server/adapters/webdav-adapter';
+import { env } from '~/server/common/util';
 
 class FileService {
   private readonly adapter: Adapter;

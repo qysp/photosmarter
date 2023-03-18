@@ -1,12 +1,12 @@
 import { format } from 'date-fns';
 import { createSignal } from 'solid-js';
 import { createServerAction$, json } from 'solid-start/server';
-import fileService from '~/lib/services/file-service';
+import fileService from '~/server/services/file-service';
 import photosmartService, {
   PhotosmartScanDimensions,
   PhotosmartScanOptions,
   PhotosmartScanResolutions,
-} from '~/lib/services/photosmart-service';
+} from '~/server/services/photosmart-service';
 import './Scan.css';
 
 export default () => {

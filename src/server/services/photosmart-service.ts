@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { load } from 'cheerio';
 import { extension } from 'mime-types';
-import { clamp, env } from '~/lib/common/util';
+import { clamp, env } from '~/server/common/util';
 
 export const PhotosmartScanResolutions = {
   High: 600,

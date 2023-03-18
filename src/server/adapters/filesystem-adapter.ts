@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Adapter } from '~/lib/adapters/adapter';
-import { env } from '~/lib/common/util';
+import { Adapter } from '~/server/adapters/adapter';
+import { env } from '~/server/common/util';
 
 class FilesystemAdapter extends Adapter {
   private directory!: string;
