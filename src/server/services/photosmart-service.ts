@@ -54,7 +54,7 @@ export type PhotosmartScanOptions = {
   quality?: number;
 };
 
-export type PhotosmartStatus = 'Idle' | 'Unknown';
+export type PhotosmartStatus = 'Idle' | 'BusyWithScanJob';
 
 export type PhotosmartScanResult = {
   extension?: string;
@@ -68,7 +68,7 @@ class PhotosmartService {
     this.baseUrl = env('PHOTOSMART_URL');
   }
 
-  async status(): Promise<PhotosmartStatus> {
+  async status(): Promise<PhotosmartStatus | undefined> {
     const url = this.baseUrl.concat('/Scan/Status');
 
     try {
@@ -78,8 +78,9 @@ class PhotosmartService {
       const status = $('ScannerState').first().text();
       return status as PhotosmartStatus;
     } catch (error) {
-      console.error(error);
-      return 'Unknown';
+      console.error('[PhotosmartService] Failed to retrieve scanner status!');
+      console.error('[PhotosmartService] Original error:', error);
+      return undefined;
     }
   }
 
@@ -170,7 +171,7 @@ class PhotosmartService {
     const format = options.type === 'PDF' ? 'Pdf' : 'Jpeg';
     const contentType = options.type === 'PDF' ? 'Document' : 'Photo';
     const compressionFactor = 100 - options.quality;
-    const color = options.color ? 'Color' : 'Black';
+    const color = options.color ? 'Color' : 'Gray';
 
     return `
       <scan:ScanJob xmlns:scan="http://www.hp.com/schemas/imaging/con/cnx/scan/2008/08/19"

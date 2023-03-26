@@ -36,6 +36,7 @@ class WebDavAdapter extends Adapter {
         `[WebDavAdapter] Failed to save file '${name}' ` +
           `in directory '${this.directory}'!`,
       );
+      console.error('[WebDavAdapter] Original error:', error);
       throw error;
     }
   }

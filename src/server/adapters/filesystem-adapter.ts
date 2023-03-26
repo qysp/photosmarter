@@ -24,6 +24,7 @@ class FilesystemAdapter extends Adapter {
         `[FilesystemAdapter] Failed to save file '${name}' ` +
           `in directory '${this.directory}'!`,
       );
+      console.error('[FilesystemAdapter] Original error:', error);
       throw error;
     }
   }
