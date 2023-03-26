@@ -11,6 +11,7 @@ import {
   Scripts,
   Title,
 } from 'solid-start';
+import { Toaster } from 'solid-toast';
 import './root.css';
 
 export default () => {

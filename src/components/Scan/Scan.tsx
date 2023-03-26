@@ -1,130 +1,137 @@
-import { format } from 'date-fns';
-import { createSignal } from 'solid-js';
-import { createServerAction$, json } from 'solid-start/server';
-import fileService from '~/server/services/file-service';
-import photosmartService, {
-  PhotosmartScanDimensions,
-  PhotosmartScanOptions,
-  PhotosmartScanResolutions,
-} from '~/server/services/photosmart-service';
-import './Scan.css';
+import { createEffect, createSignal } from 'solid-js';
+import { createServerAction$ } from 'solid-start/server';
+import toast from 'solid-toast';
+import '~/components/Scan/Scan.css';
+import { scanAndSave } from './Scan.action';
 
 export default () => {
+  const [loading, setLoading] = createSignal<string>();
   const [quality, setQuality] = createSignal(80);
 
-  const [scan, { Form }] = createServerAction$(async (form: FormData) => {
-    const type = form.get('type') as PhotosmartScanOptions['type'];
-    const dimension = form.get(
-      'dimension',
-    ) as keyof typeof PhotosmartScanDimensions;
-    const resolution = form.get(
-      'resolution',
-    ) as keyof typeof PhotosmartScanResolutions;
-    const quality = Number.parseInt(form.get('quality') as string, 10);
-    const color = form.get('color') === 'on';
+  const [scan, { Form }] = createServerAction$(scanAndSave);
 
-    const status = await photosmartService.status();
-    if (status !== 'Idle') {
-      return json({
-        success: false,
-        message: `Photosmart status is '${status}', please try again later!`,
-      });
+  createEffect(() => {
+    if (scan.result === undefined || scan.result.bodyUsed) {
+      return;
     }
 
-    // TODO: handle errors and give updates regarding the state (unvavailable,
-    // scanning, saving, ...)
-    const { data, extension } = await photosmartService.scan({
-      type,
-      dimension: PhotosmartScanDimensions[dimension],
-      resolution: PhotosmartScanResolutions[resolution],
-      quality,
-      color,
-    });
+    const loadingId = loading();
+    if (loadingId !== undefined) {
+      toast.dismiss(loadingId);
+      setLoading(undefined);
+    }
 
-    const filename = format(new Date(), 'yyyyMMdd_HHmmss').concat(
-      '.',
-      extension ?? 'unknown',
-    );
-    await fileService.save(filename, data);
-
-    return json({
-      success: true,
-      message: 'Scan completed successfully',
+    void scan.result.json().then(({ success, message }) => {
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
     });
   });
 
+  const onSubmit = () => {
+    const toastId = toast.loading('Scanning ...', {
+      iconTheme: {
+        primary: 'rgb(100, 100, 100)',
+        secondary: 'rgb(180, 180, 180)',
+      },
+    });
+    setLoading(toastId);
+  };
+
   return (
-    <Form>
-      <label for="type-select">Format</label>
-      <select
-        id="type-select"
-        name="type"
-        required={true}
-        disabled={scan.pending}
-      >
-        <option value="PDF" selected={true}>
-          PDF
-        </option>
-        <option value="JPEG">JPEG</option>
-      </select>
+    <Form onSubmit={onSubmit}>
+      <fieldset class="options">
+        <legend class="options__legend">Options</legend>
 
-      <label for="dimension-select">Paper size</label>
-      <select
-        id="dimension-select"
-        name="dimension"
-        required={true}
-        disabled={scan.pending}
-      >
-        <option value="A4" selected={true}>
-          A4
-        </option>
-        <option value="Letter">Letter</option>
-      </select>
+        <label for="type-select" class="options__label">
+          Format
+        </label>
+        <select
+          id="type-select"
+          name="type"
+          class="options__select"
+          required={true}
+          disabled={scan.pending}
+        >
+          <option value="PDF" selected={true}>
+            PDF
+          </option>
+          <option value="JPEG">JPEG</option>
+        </select>
 
-      <label for="resolution-select">Resolution</label>
-      <select
-        id="resolution-select"
-        name="resolution"
-        required={true}
-        disabled={scan.pending}
-      >
-        <option value="High">High</option>
-        <option value="Text" selected={true}>
-          Text
-        </option>
-        <option value="Photo">Photo</option>
-        <option value="Screen">Screen</option>
-      </select>
+        <label for="dimension-select" class="options__label">
+          Paper size
+        </label>
+        <select
+          id="dimension-select"
+          name="dimension"
+          class="options__select"
+          required={true}
+          disabled={scan.pending}
+        >
+          <option value="A4" selected={true}>
+            A4
+          </option>
+          <option value="Letter">Letter</option>
+        </select>
 
-      <label for="quality-range">
-        Quality <strong>({quality()}%)</strong>
-      </label>
-      <input
-        type="range"
-        name="quality"
-        id="quality-range"
-        min={0}
-        max={100}
-        step={5}
-        value={quality()}
-        oninput={({ currentTarget }) => {
-          setQuality(Number(currentTarget.value));
-        }}
-        required={true}
-        disabled={scan.pending}
-      />
+        <label for="resolution-select" class="options__label">
+          Resolution
+        </label>
+        <select
+          id="resolution-select"
+          name="resolution"
+          class="options__select"
+          required={true}
+          disabled={scan.pending}
+        >
+          <option value="High">High</option>
+          <option value="Text" selected={true}>
+            Text
+          </option>
+          <option value="Photo">Photo</option>
+          <option value="Screen">Screen</option>
+        </select>
 
-      <input
-        type="checkbox"
-        name="color"
-        id="color-checkbox"
-        checked={true}
-        disabled={scan.pending}
-      />
-      <label for="color-checkbox">Color</label>
+        <label for="color-select" class="options__label">
+          Color preference
+        </label>
+        <select
+          id="color-select"
+          name="color"
+          class="options__select"
+          required={true}
+          disabled={scan.pending}
+        >
+          <option value="Color" selected={true}>
+            Color
+          </option>
+          <option value="Black">Black</option>
+        </select>
 
-      <button type="submit" disabled={scan.pending}>
-        Scan
+        <label for="quality-range" class="options__label">
+          Quality <strong>({quality()}%)</strong>
+        </label>
+        <input
+          type="range"
+          name="quality"
+          id="quality-range"
+          min={0}
+          max={100}
+          step={5}
+          value={quality()}
+          oninput={({ currentTarget }) => {
+            setQuality(Number(currentTarget.value));
+          }}
+          required={true}
+          disabled={scan.pending}
+        />
+      </fieldset>
+
+      <button type="submit" class="options__scan" disabled={scan.pending}>
+        <span>Scan</span>
       </button>
     </Form>
   );

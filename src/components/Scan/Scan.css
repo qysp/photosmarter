@@ -1,54 +1,73 @@
-form > * {
-  width: 100%;
-}
-
-form > * + * {
-  margin-bottom: 1rem;
-}
-
-select {
-  font-size: var(--font-size-lg);
-  border: none;
-  border-radius: 0.25rem;
+fieldset.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  border-radius: 0.5rem;
   padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgb(60, 60, 60);
 }
 
-input[type='checkbox'] {
-  width: var(--font-size-lg);
-  height: var(--font-size-lg);
-  margin-right: 0.5rem;
-}
-
-input[type='checkbox'] + label {
-  font-size: var(--font-size-lg);
-}
-
-input[type='range'] {
-  font-size: var(--font-size-lg);
-}
-
-button {
-  font-size: var(--font-size-lg);
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  border: none;
+legend.options__legend {
   background: linear-gradient(
-    to bottom right,
-    var(--color-gradient-from) 33.33%,
+    to right,
+    var(--color-gradient-from) 20%,
     var(--color-gradient-to)
   );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+label.options__label {
+  align-items: center;
+  display: flex;
+  gap: 0.5ch;
+}
+
+select.options__select {
+  font-size: var(--font-size-small);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
+button.options__scan {
+  font-size: var(--font-size-base);
+  border: none;
   cursor: pointer;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.25ch;
+  width: 100%;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    to right,
+    var(--color-gradient-from) 20%,
+    var(--color-gradient-to)
+  );
+  --inner-bg: rgb(25, 25, 25);
 }
 
-button:disabled {
+button.options__scan:hover {
+  --inner-bg: rgb(30, 30, 30);
+}
+
+button.options__scan:disabled {
   opacity: 0.5;
   color: var(--color-text);
   cursor: progress;
 }
 
-button:hover {
-  /** TODO */
+button.options__scan > span {
+  display: block;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background: var(--inner-bg);
+  transition: background 0.25s cubic-bezier(0.19, 0.1, 0.61, 1.08);
+}
+
+button.options__scan > span:hover {
+  --inner-bg: rgb(30, 30, 30);
 }
