@@ -1,4 +1,6 @@
 import { format } from 'date-fns';
+import sanitize from 'sanitize-filename';
+import { APIEvent } from 'solid-start';
 import { json } from 'solid-start/server';
 import '~/components/Scan/Scan.css';
 import fileService from '~/server/services/file-service';
@@ -9,7 +11,9 @@ import photosmartService, {
   PhotosmartScanResult,
 } from '~/server/services/photosmart-service';
 
-export const scanAndSave = async (form: FormData): Promise<Response> => {
+export async function POST({ request }: APIEvent): Promise<Response> {
+  const form = await request.formData();
+
   const type = form.get('type') as PhotosmartScanOptions['type'];
   const dimension = form.get(
     'dimension',
@@ -19,6 +23,7 @@ export const scanAndSave = async (form: FormData): Promise<Response> => {
   ) as keyof typeof PhotosmartScanResolutions;
   const quality = Number.parseInt(form.get('quality') as string, 10);
   const color = form.get('color') === 'Color';
+  const preferredFileName = form.get('fileName') as string | null;
 
   const status = await photosmartService.status();
   if (status !== 'Idle') {
@@ -49,13 +54,16 @@ export const scanAndSave = async (form: FormData): Promise<Response> => {
   }
 
   const { data, extension } = result;
-  const filename = format(new Date(), 'yyyyMMdd_HHmmss').concat(
-    '.',
-    extension ?? 'unknown',
-  );
+  const safeFileName = !!preferredFileName?.trim()
+    ? sanitize(preferredFileName)
+    : format(new Date(), 'yyyyMMdd_HHmmss');
+  const safeExtension = extension ?? 'unknown';
 
   try {
-    await fileService.save(filename, data);
+    const name = safeFileName.concat(
+      !safeFileName.includes('.') ? `.${safeExtension}` : '',
+    );
+    await fileService.save(name, data);
   } catch (error) {
     return json({
       success: false,
@@ -67,4 +75,4 @@ export const scanAndSave = async (form: FormData): Promise<Response> => {
     success: true,
     message: 'Scan completed successfully',
   });
-};
+}

@@ -1,14 +1,18 @@
 import { createEffect, createSignal } from 'solid-js';
-import { createServerAction$ } from 'solid-start/server';
+import { createRouteAction } from 'solid-start';
 import toast from 'solid-toast';
 import '~/components/Scan/Scan.css';
-import { scanAndSave } from './Scan.action';
 
 export default () => {
   const [loading, setLoading] = createSignal<string>();
   const [quality, setQuality] = createSignal(80);
 
-  const [scan, { Form }] = createServerAction$(scanAndSave);
+  const [scan, { Form }] = createRouteAction(async (body: FormData) => {
+    return fetch('/api/scan', {
+      method: 'POST',
+      body,
+    });
+  });
 
   createEffect(() => {
     if (scan.result === undefined || scan.result.bodyUsed) {
