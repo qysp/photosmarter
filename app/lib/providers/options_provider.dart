@@ -18,7 +18,7 @@ enum Resolutions {
   screen,
 }
 
-enum Color {
+enum ColorPreferences {
   color,
   black,
 }
@@ -63,11 +63,12 @@ class OptionsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Color get color {
-    return Color.values[prefs?.getInt('color') ?? Color.color.index];
+  ColorPreferences get color {
+    return ColorPreferences
+        .values[prefs?.getInt('color') ?? ColorPreferences.color.index];
   }
 
-  set color(Color c) {
+  set color(ColorPreferences c) {
     prefs?.setInt('color', c.index);
     notifyListeners();
   }

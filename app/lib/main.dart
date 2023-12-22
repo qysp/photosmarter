@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photosmarter/pages/home.dart';
 import 'package:photosmarter/providers/options_provider.dart';
+import 'package:photosmarter/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -15,6 +16,7 @@ class App extends StatelessWidget {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (context) => OptionsProvider()),
+          ChangeNotifierProvider(create: (context) => SettingsProvider()),
         ],
         child: MaterialApp(
           title: 'Photosmarter',
