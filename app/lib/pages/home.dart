@@ -46,6 +46,7 @@ class _HomePageState extends State<HomePage> {
     Color? backgroundColor,
     Color? textColor,
     Duration? duration,
+    SnackBarAction? action,
   }) {
     return SnackBar(
       content: Text(content, style: TextStyle(color: textColor)),
@@ -59,6 +60,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(12.0),
       ),
       duration: duration ?? const Duration(seconds: 5),
+      action: action,
     );
   }
 
@@ -167,6 +169,23 @@ class _HomePageState extends State<HomePage> {
                           'Scan failed, is the address correct?',
                           backgroundColor: theme.colorScheme.errorContainer,
                           textColor: theme.colorScheme.onErrorContainer,
+                          action: SnackBarAction(
+                              label: 'Details',
+                              textColor: theme.colorScheme.onErrorContainer,
+                              onPressed: () => showDialog<TextEditingValue?>(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      content: Text(error.toString()),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    );
+                                  })),
                         ),
                       );
                     } finally {
