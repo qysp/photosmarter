@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from 'solid-js';
+import { createEffect, createSignal, untrack } from 'solid-js';
 import { createRouteAction } from 'solid-start';
 import toast from 'solid-toast';
 import '~/components/Scan/Scan.css';
@@ -8,6 +8,20 @@ export default () => {
   const [quality, setQuality] = createSignal(80);
 
   const [scan, { Form }] = createRouteAction(async (body: FormData) => {
+    const fileName = prompt('Enter a file name');
+    if (fileName === null) {
+      return;
+    }
+
+    const toastId = toast.loading('Scanning ...', {
+      iconTheme: {
+        primary: 'rgb(100, 100, 100)',
+        secondary: 'rgb(180, 180, 180)',
+      },
+    });
+    setLoading(toastId);
+
+    body.set('fileName', fileName);
     return fetch('/api/scan', {
       method: 'POST',
       body,
@@ -19,10 +33,16 @@ export default () => {
       return;
     }
 
-    const loadingId = loading();
+    const loadingId = untrack(() => loading());
     if (loadingId !== undefined) {
       toast.dismiss(loadingId);
       setLoading(undefined);
+    }
+
+    if (!scan.result.ok) {
+      toast.error(`Scan failed (${scan.result.statusText})`);
+      scan.clear();
+      return;
     }
 
     void scan.result.json().then(({ success, message }) => {
@@ -34,18 +54,8 @@ export default () => {
     });
   });
 
-  const onSubmit = () => {
-    const toastId = toast.loading('Scanning ...', {
-      iconTheme: {
-        primary: 'rgb(100, 100, 100)',
-        secondary: 'rgb(180, 180, 180)',
-      },
-    });
-    setLoading(toastId);
-  };
-
   return (
-    <Form onSubmit={onSubmit}>
+    <Form>
       <fieldset class="options">
         <legend class="options__legend">Options</legend>
 
