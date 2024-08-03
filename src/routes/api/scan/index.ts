@@ -53,17 +53,35 @@ export async function POST({ request }: APIEvent): Promise<Response> {
     });
   }
 
-  const { data, extension } = result;
+  const { data, extension, contentType } = result;
   const safeFileName = !!preferredFileName?.trim()
     ? sanitize(preferredFileName)
     : format(new Date(), 'yyyyMMdd_HHmmss');
   const safeExtension = extension ?? 'unknown';
 
+  const fileName = safeFileName.concat(
+    !safeFileName.includes('.') ? `.${safeExtension}` : '',
+  );
+
+  // No automatic upload desired - instead download the scanned document.
+  const accept = request.headers.get('accept');
+  if (
+    accept !== null &&
+    contentType !== undefined &&
+    accept.includes(contentType)
+  ) {
+    return new Response(data, {
+      headers: new Headers({
+        'Content-Type': contentType,
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Length': data.byteLength.toString(10),
+        'X-Photosmarter-Filename': fileName,
+      }),
+    });
+  }
+
   try {
-    const name = safeFileName.concat(
-      !safeFileName.includes('.') ? `.${safeExtension}` : '',
-    );
-    await fileService.save(name, data);
+    await fileService.save(fileName, data);
   } catch (error) {
     return json({
       success: false,

@@ -57,6 +57,7 @@ export type PhotosmartScanOptions = {
 export type PhotosmartStatus = 'Idle' | 'BusyWithScanJob';
 
 export type PhotosmartScanResult = {
+  contentType?: string;
   extension?: string;
   data: ArrayBuffer;
 };
@@ -131,6 +132,7 @@ class PhotosmartService {
     const contentType = binaryResponse.headers['content-type'];
 
     return {
+      contentType,
       extension:
         typeof contentType === 'string'
           ? extension(contentType) || undefined
