@@ -1,9 +1,15 @@
 import { createEffect, createSignal, untrack } from 'solid-js';
 import { createRouteAction } from 'solid-start';
 import toast from 'solid-toast';
+import { saveFile } from '~/client/common/util';
 import '~/components/Scan/Scan.css';
 
 export default () => {
+  const allowDirectDownloadEnv =
+    import.meta.env.VITE_ALLOW_DIRECT_DOWNLOAD?.toLowerCase();
+  const isOnlyDirectDownloadAllowed = allowDirectDownloadEnv === 'only';
+  const isDirectDownloadAllowed = allowDirectDownloadEnv === 'yes';
+
   const [loading, setLoading] = createSignal<string>();
   const [quality, setQuality] = createSignal(80);
 
@@ -24,6 +30,12 @@ export default () => {
     body.set('fileName', fileName);
     return fetch('/api/scan', {
       method: 'POST',
+      headers: {
+        accept:
+          isOnlyDirectDownloadAllowed || body.get('download') === 'on'
+            ? 'application/pdf, image/jpeg'
+            : 'application/json',
+      },
       body,
     });
   });
@@ -42,6 +54,12 @@ export default () => {
     if (!scan.result.ok) {
       toast.error(`Scan failed (${scan.result.statusText})`);
       scan.clear();
+      return;
+    }
+
+    const fileName = scan.result.headers.get('x-photosmarter-filename');
+    if (fileName !== null) {
+      void scan.result.blob().then((blob) => saveFile(blob, fileName));
       return;
     }
 
@@ -142,6 +160,21 @@ export default () => {
           required={true}
           disabled={scan.pending}
         />
+
+        {isDirectDownloadAllowed && (
+          <div class="options__download">
+            <label for="direct-download" class="options__label">
+              Direct download
+            </label>
+            <input
+              type="checkbox"
+              name="download"
+              id="direct-download"
+              disabled={scan.pending}
+              checked={false}
+            />
+          </div>
+        )}
       </fieldset>
 
       <button type="submit" class="options__scan" disabled={scan.pending}>

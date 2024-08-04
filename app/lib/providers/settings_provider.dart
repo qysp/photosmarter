@@ -21,4 +21,13 @@ class SettingsProvider extends ChangeNotifier {
     prefs?.setString('baseUrl', url);
     notifyListeners();
   }
+
+  bool get directDownload {
+    return prefs?.getBool('directDownload') ?? false;
+  }
+
+  set directDownload(bool download) {
+    prefs?.setBool('directDownload', download);
+    notifyListeners();
+  }
 }

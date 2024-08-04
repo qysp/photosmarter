@@ -10,12 +10,15 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final _baseUrlTextController = TextEditingController();
+  TextEditingController? _baseUrlTextController;
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.read<SettingsProvider>();
-    _baseUrlTextController.text = settingsProvider.baseUrl;
+    final settingsProvider = context.watch<SettingsProvider>();
+    if (_baseUrlTextController == null) {
+      _baseUrlTextController = TextEditingController();
+      _baseUrlTextController!.text = settingsProvider.baseUrl;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -37,6 +40,15 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
           ),
+          CheckboxListTile(
+            title: const Text('Direct download'),
+            value: settingsProvider.directDownload,
+            onChanged: (value) {
+              if (value != null) {
+                settingsProvider.directDownload = value;
+              }
+            },
+          )
         ],
       ),
     );
