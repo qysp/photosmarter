@@ -4,9 +4,9 @@
   "license": " GPL-3.0",
   "private": true,
   "scripts": {
-    "dev": "solid-start dev",
-    "build": "solid-start build",
-    "start": "solid-start start"
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start"
   },
   "type": "module",
   "devDependencies": {
@@ -15,22 +15,21 @@
     "cheerio": "^1.0.0-rc.12",
     "esbuild": "^0.14.54",
     "postcss": "^8.4.31",
-    "solid-start-node": "^0.2.19",
     "typescript": "^4.9.4",
     "vite": "^4.5.3"
   },
   "dependencies": {
-    "@solidjs/meta": "^0.28.2",
-    "@solidjs/router": "^0.7.0",
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "^0.14.2",
+    "@solidjs/start": "^1.0.6",
     "axios": "^1.6.0",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.6.0",
     "mime-types": "^2.1.35",
     "sanitize-filename": "^1.6.3",
-    "solid-js": "^1.6.11",
-    "solid-start": "^0.2.23",
+    "solid-js": "^1.8.20",
     "solid-toast": "^0.5.0",
-    "undici": "^5.28.4",
-    "webdav": "^5.0.0-r3"
+    "vinxi": "^0.4.1",
+    "webdav": "^5.7.1"
   },
   "engines": {
     "node": ">=16.8"

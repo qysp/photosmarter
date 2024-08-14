@@ -1,63 +1,80 @@
+import { action, useSubmission } from '@solidjs/router';
 import { createEffect, createSignal, untrack } from 'solid-js';
-import { createRouteAction } from 'solid-start';
 import toast from 'solid-toast';
 import '~/components/Scan/Scan.css';
+import { scan, ScanResult } from '~/server/api/scan';
+
+const performScan = action(async (form: FormData): Promise<ScanResult> => {
+  'use server';
+  return scan(form);
+}, 'scan');
 
 export default () => {
   const [loading, setLoading] = createSignal<string>();
   const [quality, setQuality] = createSignal(80);
+  const [fileName, setFileName] = createSignal('');
+  const scanning = useSubmission(performScan);
 
-  const [scan, { Form }] = createRouteAction(async (body: FormData) => {
-    const fileName = prompt('Enter a file name');
-    if (fileName === null) {
+  const handleSubmit = (event: Event) => {
+    const name = prompt('Enter a file name');
+    // Prompt was cancelled!
+    if (name === null) {
+      event.preventDefault();
       return;
     }
 
-    const toastId = toast.loading('Scanning ...', {
-      iconTheme: {
-        primary: 'rgb(100, 100, 100)',
-        secondary: 'rgb(180, 180, 180)',
-      },
-    });
-    setLoading(toastId);
+    setFileName(name);
+  };
 
-    body.set('fileName', fileName);
-    return fetch('/api/scan', {
-      method: 'POST',
-      body,
-    });
+  createEffect(() => {
+    if (scanning.pending) {
+      const toastId = toast.loading('Scanning ...', {
+        iconTheme: {
+          primary: 'rgb(100, 100, 100)',
+          secondary: 'rgb(180, 180, 180)',
+        },
+      });
+      setLoading(toastId);
+    } else {
+      const loadingId = untrack(() => loading());
+      if (loadingId !== undefined) {
+        toast.dismiss(loadingId);
+        setLoading(undefined);
+      }
+    }
   });
 
   createEffect(() => {
-    if (scan.result === undefined || scan.result.bodyUsed) {
+    if (scanning.result === undefined) {
       return;
     }
 
-    const loadingId = untrack(() => loading());
-    if (loadingId !== undefined) {
-      toast.dismiss(loadingId);
-      setLoading(undefined);
+    if (scanning.result.success) {
+      toast.success(scanning.result.message);
+    } else {
+      toast.error(scanning.result.message);
     }
+  });
 
-    if (!scan.result.ok) {
-      toast.error(`Scan failed (${scan.result.statusText})`);
-      scan.clear();
+  createEffect(() => {
+    if (!scanning.error) {
       return;
     }
 
-    void scan.result.json().then(({ success, message }) => {
-      if (success) {
-        toast.success(message);
-      } else {
-        toast.error(message);
-      }
-    });
+    toast.error(`Scan failed (${scanning.error})`);
+    scanning.clear();
   });
 
   return (
-    <Form>
+    <form
+      method="post"
+      action={performScan}
+      onSubmit={(event) => handleSubmit(event)}
+    >
       <fieldset class="options">
         <legend class="options__legend">Options</legend>
+
+        <input type="hidden" name="fileName" value={fileName()} />
 
         <label for="type-select" class="options__label">
           Format
@@ -67,7 +84,7 @@ export default () => {
           name="type"
           class="options__select"
           required={true}
-          disabled={scan.pending}
+          disabled={scanning.pending}
         >
           <option value="PDF" selected={true}>
             PDF
@@ -83,7 +100,7 @@ export default () => {
           name="dimension"
           class="options__select"
           required={true}
-          disabled={scan.pending}
+          disabled={scanning.pending}
         >
           <option value="A4" selected={true}>
             A4
@@ -99,7 +116,7 @@ export default () => {
           name="resolution"
           class="options__select"
           required={true}
-          disabled={scan.pending}
+          disabled={scanning.pending}
         >
           <option value="High">High</option>
           <option value="Text" selected={true}>
@@ -117,7 +134,7 @@ export default () => {
           name="color"
           class="options__select"
           required={true}
-          disabled={scan.pending}
+          disabled={scanning.pending}
         >
           <option value="Color" selected={true}>
             Color
@@ -140,13 +157,13 @@ export default () => {
             setQuality(Number(currentTarget.value));
           }}
           required={true}
-          disabled={scan.pending}
+          disabled={scanning.pending}
         />
       </fieldset>
 
-      <button type="submit" class="options__scan" disabled={scan.pending}>
+      <button type="submit" class="options__scan" disabled={scanning.pending}>
         <span>Scan</span>
       </button>
-    </Form>
+    </form>
   );
 };

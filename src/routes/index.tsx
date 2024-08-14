@@ -1,4 +1,4 @@
-import { Title } from 'solid-start';
+import { Title } from '@solidjs/meta';
 import { Toaster, ToastOptions } from 'solid-toast';
 import Scan from '~/components/Scan/Scan';
 import './index.css';
@@ -11,7 +11,7 @@ const toastOptions: ToastOptions = {
   iconTheme: {
     secondary: 'var(--toast-color-bg)',
   },
-}
+};
 
 export default () => {
   return (
