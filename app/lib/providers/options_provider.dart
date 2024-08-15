@@ -39,8 +39,8 @@ class OptionsProvider extends ChangeNotifier {
     return Types.values[prefs?.getInt('type') ?? Types.pdf.index];
   }
 
-  set type(Types t) {
-    prefs?.setInt('type', t.index);
+  set type(Types value) {
+    prefs?.setInt('type', value.index);
     notifyListeners();
   }
 
@@ -48,8 +48,8 @@ class OptionsProvider extends ChangeNotifier {
     return Dimensions.values[prefs?.getInt('dimension') ?? Dimensions.a4.index];
   }
 
-  set dimension(Dimensions d) {
-    prefs?.setInt('dimension', d.index);
+  set dimension(Dimensions value) {
+    prefs?.setInt('dimension', value.index);
     notifyListeners();
   }
 
@@ -58,8 +58,8 @@ class OptionsProvider extends ChangeNotifier {
         .values[prefs?.getInt('resolution') ?? Resolutions.text.index];
   }
 
-  set resolution(Resolutions r) {
-    prefs?.setInt('resolution', r.index);
+  set resolution(Resolutions value) {
+    prefs?.setInt('resolution', value.index);
     notifyListeners();
   }
 
@@ -68,8 +68,8 @@ class OptionsProvider extends ChangeNotifier {
         .values[prefs?.getInt('color') ?? ColorPreferences.color.index];
   }
 
-  set color(ColorPreferences c) {
-    prefs?.setInt('color', c.index);
+  set color(ColorPreferences value) {
+    prefs?.setInt('color', value.index);
     notifyListeners();
   }
 
@@ -77,8 +77,17 @@ class OptionsProvider extends ChangeNotifier {
     return prefs?.getDouble('quality') ?? 80;
   }
 
-  set quality(double q) {
-    prefs?.setDouble('quality', q);
+  set quality(double value) {
+    prefs?.setDouble('quality', value);
+    notifyListeners();
+  }
+
+  bool get directDownload {
+    return prefs?.getBool('directDownload') ?? false;
+  }
+
+  set directDownload(bool value) {
+    prefs?.setBool('directDownload', value);
     notifyListeners();
   }
 }

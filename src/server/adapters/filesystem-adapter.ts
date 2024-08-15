@@ -20,11 +20,12 @@ class FilesystemAdapter extends Adapter {
         flag: 'wx',
       });
     } catch (error) {
-      console.error(
-        `[FilesystemAdapter] Failed to save file '${name}' ` +
-          `in directory '${this.directory}'!`,
+      this.logger.error(
+        "Failed to save file '%s' in directory '%s'!",
+        name,
+        this.directory,
       );
-      console.error('[FilesystemAdapter] Original error:', error);
+      this.logger.error('Original error:', error);
       throw error;
     }
   }
