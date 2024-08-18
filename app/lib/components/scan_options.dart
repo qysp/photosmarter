@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:photosmarter/extensions/string_formatting.dart';
 import 'package:photosmarter/providers/options_provider.dart';
+import 'package:photosmarter/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class ScanOptions extends StatefulWidget {
@@ -14,6 +16,7 @@ class _ScanOptionsState extends State<ScanOptions> {
   @override
   Widget build(BuildContext context) {
     final optionsProvider = context.watch<OptionsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
 
     final typesDropdown = DropdownMenu(
         expandedInsets: const EdgeInsets.all(8.0),
@@ -100,36 +103,52 @@ class _ScanOptionsState extends State<ScanOptions> {
         });
 
     final qualitySlider = Slider(
-        label: 'Quality',
+        label: 'Quality (${optionsProvider.quality.toInt()}%)',
         min: 0.0,
         max: 100.0,
         divisions: 10,
         value: optionsProvider.quality,
         onChanged: (value) {
           optionsProvider.quality = value;
+          HapticFeedback.selectionClick();
         });
+
+    final children = [
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: typesDropdown,
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: dimensionsDropdown,
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: resolutionsDropdown,
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: colorsDropdown,
+      ),
+      qualitySlider,
+    ];
+
+    if (settingsProvider.isDirectDownloadAllowed) {
+      final directDownload = CheckboxListTile(
+          title: const Text('Direct download'),
+          value: optionsProvider.directDownload,
+          onChanged: (value) {
+            if (value != null) {
+              optionsProvider.directDownload = value;
+            }
+          });
+
+      children.add(directDownload);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: typesDropdown,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: dimensionsDropdown,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: resolutionsDropdown,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: colorsDropdown,
-        ),
-        qualitySlider,
-      ],
+      children: children,
     );
   }
 }

@@ -1,15 +1,35 @@
 import { action, useSubmission } from '@solidjs/router';
 import { createEffect, createSignal, untrack } from 'solid-js';
 import toast from 'solid-toast';
+import { base64ToBlob, saveFile } from '~/client/common/util';
 import '~/components/Scan/Scan.css';
 import { scan, ScanResult } from '~/server/api/scan';
 
-const performScan = action(async (form: FormData): Promise<ScanResult> => {
-  'use server';
-  return scan(form);
-}, 'scan');
+const performScan = action(
+  async (form: FormData): Promise<ScanResult<string>> => {
+    'use server';
+
+    const { file, ...result } = await scan(form);
+    if (file === undefined) {
+      return result;
+    }
+
+    const data = Buffer.from(file.data).toString('base64');
+    return {
+      ...result,
+      file: {
+        ...file,
+        data,
+      },
+    };
+  },
+  'scan',
+);
 
 export default () => {
+  const isDirectDownloadAllowed =
+    import.meta.env.VITE_ALLOW_DIRECT_DOWNLOAD?.toLowerCase() === 'yes';
+
   const [loading, setLoading] = createSignal<string>();
   const [quality, setQuality] = createSignal(80);
   const [fileName, setFileName] = createSignal('');
@@ -46,6 +66,13 @@ export default () => {
 
   createEffect(() => {
     if (scanning.result === undefined) {
+      return;
+    }
+
+    const file = scanning.result.file;
+    if (file !== undefined) {
+      const blob = base64ToBlob(file.data, file.type);
+      void saveFile(blob, file.name);
       return;
     }
 
@@ -159,6 +186,21 @@ export default () => {
           required={true}
           disabled={scanning.pending}
         />
+
+        {isDirectDownloadAllowed && (
+          <div class="options__download">
+            <label for="direct-download" class="options__label">
+              Direct download
+            </label>
+            <input
+              type="checkbox"
+              name="download"
+              id="direct-download"
+              disabled={scanning.pending}
+              checked={false}
+            />
+          </div>
+        )}
       </fieldset>
 
       <button type="submit" class="options__scan" disabled={scanning.pending}>

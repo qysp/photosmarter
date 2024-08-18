@@ -71,3 +71,11 @@ button.options__scan > span {
 button.options__scan > span:hover {
   --inner-bg: rgb(30, 30, 30);
 }
+
+div.options__download {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0.5ch;
+}
