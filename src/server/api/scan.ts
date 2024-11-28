@@ -7,10 +7,16 @@ import photosmartService, {
   PhotosmartScanResolutions,
   PhotosmartScanResult,
 } from '~/server/services/photosmart-service';
+import { env } from '../common/util';
 
-export type ScanResult = {
+export type ScanResult<D = ArrayBuffer> = {
   success: boolean;
   message: string;
+  file?: {
+    name: string;
+    type: string;
+    data: D;
+  };
 };
 
 export const scan = async (form: FormData): Promise<ScanResult> => {
@@ -23,6 +29,9 @@ export const scan = async (form: FormData): Promise<ScanResult> => {
   ) as keyof typeof PhotosmartScanResolutions;
   const quality = Number.parseInt(form.get('quality') as string, 10);
   const color = form.get('color') === 'Color';
+  const directDownload =
+    env('VITE_ALLOW_DIRECT_DOWNLOAD') === 'only' ||
+    form.get('download') === 'on';
   const preferredFileName = form.get('fileName') as string | null;
 
   const status = await photosmartService.status();
@@ -53,16 +62,28 @@ export const scan = async (form: FormData): Promise<ScanResult> => {
     };
   }
 
-  const { data, extension } = result;
+  const { data, extension, contentType } = result;
   const safeFileName = !!preferredFileName?.trim()
     ? sanitize(preferredFileName)
     : format(new Date(), 'yyyyMMdd_HHmmss');
   const safeExtension = extension ?? 'unknown';
+  const name = safeFileName.concat(
+    !safeFileName.endsWith(`.${safeExtension}`) ? `.${safeExtension}` : '',
+  );
+
+  if (directDownload) {
+    return {
+      success: true,
+      message: 'Scan completed successfully',
+      file: {
+        name,
+        type: contentType,
+        data,
+      },
+    };
+  }
 
   try {
-    const name = safeFileName.concat(
-      !safeFileName.includes('.') ? `.${safeExtension}` : '',
-    );
     await fileService.save(name, data);
   } catch (error) {
     return {

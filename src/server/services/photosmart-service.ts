@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { load } from 'cheerio';
 import { extension } from 'mime-types';
+import { createLogger } from '~/server/common/logger';
 import { clamp, env } from '~/server/common/util';
 
 export const PhotosmartScanResolutions = {
@@ -57,11 +58,13 @@ export type PhotosmartScanOptions = {
 export type PhotosmartStatus = 'Idle' | 'BusyWithScanJob';
 
 export type PhotosmartScanResult = {
+  contentType: string;
   extension?: string;
   data: ArrayBuffer;
 };
 
 class PhotosmartService {
+  private readonly logger = createLogger(this.constructor.name);
   private readonly baseUrl: string;
 
   constructor() {
@@ -78,8 +81,8 @@ class PhotosmartService {
       const status = $('ScannerState').first().text();
       return status as PhotosmartStatus;
     } catch (error) {
-      console.error('[PhotosmartService] Failed to retrieve scanner status!');
-      console.error('[PhotosmartService] Original error:', error);
+      this.logger.error('Failed to retrieve scanner status!');
+      this.logger.error('Original error:', error);
       return undefined;
     }
   }
@@ -101,7 +104,7 @@ class PhotosmartService {
 
     const xml = this.createScanJob(normalizedOptions);
 
-    const response = await axios.post<void>(url, {
+    const response = await axios.post<any>(url, {
       body: xml,
       headers: {
         'Content-Type': 'application/xml',
@@ -109,6 +112,11 @@ class PhotosmartService {
       },
     });
     if (response.status !== 201) {
+      this.logger.error(
+        'Scan failed with status code %d and body %s',
+        response.status,
+        response.data ? JSON.stringify(response.data) : '<empty>',
+      );
       throw new Error(
         `Failed sending scan job (${response.status} ${response.statusText})`,
       );
@@ -118,9 +126,13 @@ class PhotosmartService {
     // there should be only a single scan job.
     const [binaryUrl] = await this.fetchIncompleteBinaryUrls();
     if (binaryUrl === undefined) {
+      this.logger.error(
+        'Determining incomplete binary URL failed (none found)',
+      );
       throw new Error('Binary URL could not be determined');
     }
 
+    this.logger.debug('Fetching binary via URL: %s', binaryUrl);
     const binaryResponse = await axios.get<ArrayBuffer>(
       this.baseUrl.concat(binaryUrl),
       {
@@ -128,14 +140,19 @@ class PhotosmartService {
       },
     );
 
-    const contentType = binaryResponse.headers['content-type'];
+    const data = binaryResponse.data;
+    const contentType =
+      binaryResponse.headers['content-type'] ?? 'application/octet-stream';
+    this.logger.debug(
+      'Received binary of type %s with %d bytes of data',
+      contentType,
+      data.byteLength,
+    );
 
     return {
-      extension:
-        typeof contentType === 'string'
-          ? extension(contentType) || undefined
-          : undefined,
-      data: binaryResponse.data,
+      contentType,
+      extension: extension(contentType) || undefined,
+      data,
     };
   }
 

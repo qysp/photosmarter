@@ -32,11 +32,12 @@ class WebDavAdapter extends Adapter {
         overwrite: false,
       });
     } catch (error) {
-      console.error(
-        `[WebDavAdapter] Failed to save file '${name}' ` +
-          `in directory '${this.directory}'!`,
+      this.logger.error(
+        "Failed to save file '%s' in directory '%s'!",
+        name,
+        this.directory,
       );
-      console.error('[WebDavAdapter] Original error:', error);
+      this.logger.error('Original error:', error);
       throw error;
     }
   }
